@@ -1,5 +1,5 @@
-<p style="text-align:center">
-    <img height="500" width="500" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
+<p style="text-align:center; margin: 0 auto;">
+    <img height="500" width="592" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </p>
 
 # UGO SPECTATOR
