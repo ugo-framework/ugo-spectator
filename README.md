@@ -1,9 +1,9 @@
 <div style="width: 100%; text-align:center; margin: 0 auto;">
-    <img height="300" width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
+    <img width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </div>
 
 # UGO SPECTATOR
-## _The only file watcher you will ever need_
+ _The only file watcher you will ever need written in go (Golang)._
 
 ## Installation
 ```shell script
