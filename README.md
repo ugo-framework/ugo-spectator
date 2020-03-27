@@ -1,6 +1,6 @@
-<p style="text-align:center; margin: 0 auto;">
-    <img height="500" width="592" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
-</p>
+<div style="text-align:center; margin: 0 auto;">
+    <img height="300" width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
+</div>
 
 # UGO SPECTATOR
 ## _The only file watcher you will ever need_
