@@ -1,4 +1,4 @@
-<div style="width: 100%; text-align:center; margin: 0 auto;">
+<div align="center">
     <img width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </div>
 
