@@ -1,5 +1,5 @@
 <p style="text-align:center">
-    <img src="./assets/ugo-spectator.png" alt="ugo spectator logo">
+    <img height="500" width="500" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </p>
 
 # UGO SPECTATOR
@@ -22,7 +22,7 @@ if err != nil {
 }
 err = watcher.Close()
 if err != nil {
-		// Handle Error
+    // Handle Error
 }
 ```
 The full example can be viewed [here](./examples/example.go)
