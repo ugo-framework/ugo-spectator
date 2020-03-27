@@ -1,5 +1,5 @@
 <div style="text-align:center; margin: 0 auto;">
-    <img height="300" width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
+    <img align=""right" height="300" width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </div>
 
 # UGO SPECTATOR
