@@ -2,7 +2,7 @@
     <img width="300" src="./assets/ugo-spectator.png" alt="ugo spectator logo">
 </div>
 
-# UGO SPECTATOR
+# Ugo Spectator
  _The only file watcher you will ever need written in go (Golang)._
 
 ## Installation
