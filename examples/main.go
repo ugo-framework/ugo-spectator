@@ -1,12 +1,12 @@
-package examples
+package main
 
 import (
-	ugo "github.com/ugo-framework/ugo-spectator"
+	ugoSpectator "github.com/ugo-framework/ugo-spectator/lib"
 	"log"
 )
 
-func example() {
-	watcher, err := ugo.Init("..")
+func main() {
+	watcher, err := ugoSpectator.Init("")
 	if err != nil {
 		log.Fatal(err)
 		panic(err)

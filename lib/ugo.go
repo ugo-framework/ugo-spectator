@@ -1,6 +1,6 @@
 // Copyright 2020 The Go Authors and UGO Authors
 /*
-Package ugo implements a simple library to watch files on the
+Package ugoSpectator implements a simple library to watch files on the
 directory specified.
 
 Methods:
@@ -8,27 +8,28 @@ Methods:
 		Close() error
 
 */
-package ugo
+package ugoSpectator
 
 import (
+	"fmt"
 	"github.com/fsnotify/fsnotify"
-	"log"
 	"os"
 	"path"
 )
 
-// UGO struct with Watcher  and all methods
-type UGO struct {
+// UgoSpectator struct with Watcher  and all methods
+type UgoSpectator struct {
 	Watcher *fsnotify.Watcher
 }
 
 // Init initializes the fsnotify NewWatcher and
 //  a *fsnotify watcher instance and an error
-func Init(dirname string) (*UGO, error) {
+func Init(dirname string) (*UgoSpectator, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return &UGO{}, err
+		return &UgoSpectator{}, err
 	}
+	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
 	done := make(chan bool)
 	go func() {
 		for {
@@ -37,31 +38,35 @@ func Init(dirname string) (*UGO, error) {
 				if !ok {
 					return
 				}
-				log.Println("event:", event)
+				fmt.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					log.Println("modified file:", event.Name)
+					fmt.Println("modified file:", event.Name)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
 				}
-				log.Println("error:", err)
+				fmt.Println("error:", err)
 			}
 		}
 	}()
 
 	cPath, err := os.Getwd()
 	if err != nil {
-		return &UGO{}, err
+		return &UgoSpectator{}, err
 	}
-	err = watcher.Add(path.Join(cPath, dirname))
+	pathToWatch := path.Join(cPath, dirname)
+	fmt.Printf("\033[1;36m%s%s\033[0m", "\n at ", pathToWatch)
+
+	err = watcher.Add(pathToWatch)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	<-done
-	return &UGO{Watcher: watcher}, nil
+	return &UgoSpectator{Watcher: watcher}, nil
 }
 
-func (u *UGO) Close() error {
+func (u *UgoSpectator) Close() error {
+	fmt.Printf("\033[1;31m%s\033[0m", "Ugo Spector Closing")
 	return u.Watcher.Close()
 }
