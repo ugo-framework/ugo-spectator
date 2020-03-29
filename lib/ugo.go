@@ -4,7 +4,7 @@ Package ugoSpectator implements a simple library to watch files on the
 directory specified.
 
 Methods:
-		Init() (*UGO, error)
+		Init() (*UgoSpectator, error)
 		Close() error
 
 */
@@ -15,6 +15,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"os"
 	"path"
+	"strings"
 )
 
 // UgoSpectator struct with Watcher  and all methods
@@ -38,10 +39,12 @@ func Init(dirname string) (*UgoSpectator, error) {
 				if !ok {
 					return
 				}
-				fmt.Println("event:", event)
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					fmt.Println("modified file:", event.Name)
+				//fmt.Println("event:", event)
+				fileSplit := strings.SplitN(event.Name, "/", -1)
+				if event.Op == fsnotify.Write {
+					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 				}
+
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -56,7 +59,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 		return &UgoSpectator{}, err
 	}
 	pathToWatch := path.Join(cPath, dirname)
-	fmt.Printf("\033[1;36m%s%s\033[0m", "\n at ", pathToWatch)
+	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
 
 	err = watcher.Add(pathToWatch)
 	if err != nil {
