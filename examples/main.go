@@ -1,19 +1,17 @@
 package main
 
 import (
-	ugoSpectator "github.com/ugo-framework/ugo-spectator/lib"
+	spectator "github.com/ugo-framework/ugo-spectator/lib"
 	"log"
 )
 
 func main() {
-	watcher, err := ugoSpectator.Init("")
+
+	// initialise the spectator with the dirname
+	watcher, err := spectator.Init(".")
 	if err != nil {
 		log.Fatal(err)
 		panic(err)
 	}
-	err = watcher.Close()
-	if err != nil {
-		log.Fatal(err)
-		panic(err)
-	}
+	defer watcher.Close() // handle error
 }

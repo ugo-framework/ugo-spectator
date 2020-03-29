@@ -8,7 +8,7 @@ Methods:
 		Close() error
 
 */
-package ugoSpectator
+package spectator
 
 import (
 	"fmt"
@@ -20,7 +20,8 @@ import (
 
 // UgoSpectator struct with Watcher  and all methods
 type UgoSpectator struct {
-	Watcher *fsnotify.Watcher
+	Watcher *fsnotify.Watcher // *fsnotify watcher instance
+	Cb      string            // Function to restart after watching
 }
 
 // Init initializes the fsnotify NewWatcher and
@@ -39,10 +40,16 @@ func Init(dirname string) (*UgoSpectator, error) {
 				if !ok {
 					return
 				}
-				//fmt.Println("event:", event)
+				fmt.Println("event:", event.Op)
 				fileSplit := strings.SplitN(event.Name, "/", -1)
-				if event.Op == fsnotify.Write {
+				if event.Op == fsnotify.Create {
 					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+				}
+				if event.Op&fsnotify.Remove == fsnotify.Remove {
+					fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+				}
+				if event.Op&fsnotify.Rename == fsnotify.Rename {
+					fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 				}
 
 			case err, ok := <-watcher.Errors:
@@ -65,7 +72,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	<-done
+	fmt.Println("Done: ", <-done)
 	return &UgoSpectator{Watcher: watcher}, nil
 }
 
