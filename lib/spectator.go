@@ -11,6 +11,7 @@ Methods:
 package spectator
 
 import (
+	"context"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"os"
@@ -22,9 +23,11 @@ import (
 
 // UgoSpectator struct with Watcher  and all methods
 type UgoSpectator struct {
-	Watcher *fsnotify.Watcher // *fsnotify watcher instance
-	Cb      string            // Function to restart after watching
-	osV     string
+	Watcher       *fsnotify.Watcher  // *fsnotify watcher instance
+	dirname       string             // dirname to watch
+	fileToRestart string             // Function to restart after watching
+	osV           string             // osV ttake the current os
+	CancelCtx     context.CancelFunc // context to cancel
 }
 
 // Init initializes the fsnotify NewWatcher and
@@ -37,58 +40,38 @@ func Init(dirname string) (*UgoSpectator, error) {
 	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS}
 	clear(ugoWatcher.osV)
 	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
-	done := make(chan bool)
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				fmt.Println("event:", event.Op)
-				fileSplit := strings.SplitN(event.Name, "/", -1)
-				if event.Op == fsnotify.Create {
-					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
-				}
-				if event.Op == fsnotify.Write {
-					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
-				}
-				if event.Op&fsnotify.Remove == fsnotify.Remove {
-					fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
-				}
-				if event.Op&fsnotify.Rename == fsnotify.Rename {
-					fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
-				}
-
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				fmt.Println("error:", err)
-			}
-		}
-	}()
+	//wg := &sync.WaitGroup{}
+	ctx, cancel := context.WithCancel(context.Background())
+	ugoWatcher.CancelCtx = cancel
+	ch := make(chan string)
 
 	cPath, err := os.Getwd()
 	if err != nil {
 		return &UgoSpectator{}, err
 	}
 	pathToWatch := path.Join(cPath, dirname)
+	ugoWatcher.dirname = pathToWatch
 	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
+	// calling fsNotifiyFunc in a goroutine
+	go fsNotifiyFunc(ctx, ch, ugoWatcher.osV, ugoWatcher)
 
 	err = watcher.Add(pathToWatch)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Done: ", <-done)
+	//fmt.Println("Done: ", <-done)
 	return ugoWatcher, nil
 }
 
+// Close return error if an error occurs during the closing of the
+// fsnotify watcher instance
 func (u *UgoSpectator) Close() error {
+	u.CancelCtx()
 	fmt.Printf("\033[1;31m%s\033[0m", "Ugo Spector Closing")
 	return u.Watcher.Close()
 }
 
+// Clear screen function
 func clear(osV string) {
 	if osV == "linux" {
 		cmd := exec.Command("clear")
@@ -107,4 +90,41 @@ func clear(osV string) {
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
+}
+
+func fsNotifiyFunc(ctx context.Context, ch chan string, osV string, u *UgoSpectator) {
+	for {
+		select {
+		case event, ok := <-u.Watcher.Events:
+			if !ok {
+				return
+			}
+			fileSplit := strings.SplitN(event.Name, "/", -1)
+			if event.Op == fsnotify.Create {
+				fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+			}
+			if event.Op == fsnotify.Write {
+				fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+			}
+			if event.Op&fsnotify.Remove == fsnotify.Remove {
+				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
+				clear(osV)
+				fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
+				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
+
+				ctx.Done()
+			}
+			if event.Op&fsnotify.Rename == fsnotify.Rename {
+				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+			}
+
+		case err, ok := <-u.Watcher.Errors:
+			if !ok {
+				return
+			}
+			fmt.Println("error:", err)
+		}
+	}
+
 }
