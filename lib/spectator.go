@@ -14,7 +14,9 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"os"
+	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 )
 
@@ -22,6 +24,7 @@ import (
 type UgoSpectator struct {
 	Watcher *fsnotify.Watcher // *fsnotify watcher instance
 	Cb      string            // Function to restart after watching
+	osV     string
 }
 
 // Init initializes the fsnotify NewWatcher and
@@ -31,6 +34,8 @@ func Init(dirname string) (*UgoSpectator, error) {
 	if err != nil {
 		return &UgoSpectator{}, err
 	}
+	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS}
+	clear(ugoWatcher.osV)
 	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
 	done := make(chan bool)
 	go func() {
@@ -43,6 +48,9 @@ func Init(dirname string) (*UgoSpectator, error) {
 				fmt.Println("event:", event.Op)
 				fileSplit := strings.SplitN(event.Name, "/", -1)
 				if event.Op == fsnotify.Create {
+					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
+				}
+				if event.Op == fsnotify.Write {
 					fmt.Printf("modified file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 				}
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
@@ -73,10 +81,30 @@ func Init(dirname string) (*UgoSpectator, error) {
 		fmt.Println(err)
 	}
 	fmt.Println("Done: ", <-done)
-	return &UgoSpectator{Watcher: watcher}, nil
+	return ugoWatcher, nil
 }
 
 func (u *UgoSpectator) Close() error {
 	fmt.Printf("\033[1;31m%s\033[0m", "Ugo Spector Closing")
 	return u.Watcher.Close()
+}
+
+func clear(osV string) {
+	if osV == "linux" {
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+
+	}
+	if osV == "darwin" {
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+
+	}
+	if osV == "windows" {
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
 }
