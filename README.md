@@ -14,17 +14,22 @@ Then use it in your code use the following sysntax
 ```go
 package examples
 
-import 	spectator "github.com/ugo-framework/ugo-spectator/lib"
+import spectator "github.com/ugo-framework/ugo-spectator/lib"
+
 func main() {
 	// initialise the spectator with the dirname
-	watcher, err := spectator.Init(".")  // Relative path to your directory
-	ch := make(chan string)
+	watcher, err := spectator.Init(".")
 	if err != nil {
-        // handle Error
+		// Handle Error
 	}
-	// to hold the program from exiting
-	<-ch
 	defer watcher.Close() // handle error
+	// event to catch for file change
+	for {
+		select {
+		case res := <-watcher.Ch:
+			// Do Something
+		}
+	}
 }
     
 ```
