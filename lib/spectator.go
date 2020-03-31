@@ -19,6 +19,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // UgoSpectator struct with Watcher  and all methods
@@ -40,7 +41,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS, Ch: make(chan bool)}
 	clear(ugoWatcher.osV)
 	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
-ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	ugoWatcher.CancelCtx = cancel
 	cPath, err := os.Getwd()
 	if err != nil {
@@ -63,7 +64,7 @@ ctx, cancel := context.WithCancel(context.Background())
 // fsnotify watcher instance
 func (u *UgoSpectator) Close() error {
 	u.CancelCtx()
-	fmt.Printf("\033[1;31m%s\033[0m", "Ugo Spector Closing")
+	fmt.Printf("\033[1;31m%s\033[0m", "\nUgo Spector Closing\n")
 	return u.Watcher.Close()
 }
 
@@ -105,10 +106,10 @@ func fsNotifiyFunc(ctx context.Context, osV string, u *UgoSpectator) {
 			if event.Op&fsnotify.Remove == fsnotify.Remove {
 				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
-
 			}
 			u.Ch <- true
 			fmt.Printf("\033[1;36m%s\033[0m", "Reloading...")
+			time.Sleep(time.Second * 1)
 			clear(osV)
 			fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
 			fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
