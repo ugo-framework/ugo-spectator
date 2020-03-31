@@ -19,6 +19,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // UgoSpectator struct with Watcher  and all methods
@@ -74,7 +75,7 @@ func (u *UgoSpectator) Close() error {
 // Clear screen function
 func clear(osV string) {
 	if osV == "linux" {
-		cmd := exec.Command("clear")
+		cmd := exec.Command("go run main.go")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 
@@ -109,12 +110,15 @@ func fsNotifiyFunc(ctx context.Context, ch chan string, osV string, u *UgoSpecta
 			if event.Op&fsnotify.Remove == fsnotify.Remove {
 				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
-				clear(osV)
-				fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
-				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
 
-				ctx.Done()
 			}
+
+			fmt.Printf("\033[1;36m%s\033[0m", "Reloading...")
+			time.Sleep(1 * time.Second)
+			clear(osV)
+			fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
+			fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
+			ctx.Done()
 			if event.Op&fsnotify.Rename == fsnotify.Rename {
 				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
 			}

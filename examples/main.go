@@ -1,8 +1,9 @@
 package main
 
 import (
-	spectator "github.com/ugo-framework/ugo-spectator/lib"
 	"log"
+
+	spectator "github.com/ugo-framework/ugo-spectator/lib"
 )
 
 func main() {
@@ -13,6 +14,7 @@ func main() {
 		log.Fatal(err)
 		panic(err)
 	}
+	// to hold the program from exiting
 	<-ch
 	defer watcher.Close() // handle error
 }
