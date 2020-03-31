@@ -40,11 +40,8 @@ func Init(dirname string) (*UgoSpectator, error) {
 	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS, Ch: make(chan bool)}
 	clear(ugoWatcher.osV)
 	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
-	//wg := &sync.WaitGroup{}
-	ctx, cancel := context.WithCancel(context.Background())
+ctx, cancel := context.WithCancel(context.Background())
 	ugoWatcher.CancelCtx = cancel
-	//ch := make(chan bool)
-
 	cPath, err := os.Getwd()
 	if err != nil {
 		return &UgoSpectator{}, err
