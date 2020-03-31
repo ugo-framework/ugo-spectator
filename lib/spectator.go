@@ -24,11 +24,11 @@ import (
 
 // UgoSpectator struct with Watcher  and all methods
 type UgoSpectator struct {
-	Watcher       *fsnotify.Watcher  // *fsnotify watcher instance
-	dirname       string             // dirname to watch
-	fileToRestart string             // Function to restart after watching
-	osV           string             // osV ttake the current os
-	CancelCtx     context.CancelFunc // context to cancel
+	Watcher   *fsnotify.Watcher  // *fsnotify watcher instance
+	osV       string             // osV take the current os
+	dirname   string             // dirname to watch
+	ch        chan bool          // ch to trigger on file change
+	CancelCtx context.CancelFunc // context to cancel
 }
 
 // Init initializes the fsnotify NewWatcher and
@@ -44,7 +44,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 	//wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	ugoWatcher.CancelCtx = cancel
-	ch := make(chan string)
+	ch := make(chan bool)
 
 	cPath, err := os.Getwd()
 	if err != nil {
@@ -55,12 +55,10 @@ func Init(dirname string) (*UgoSpectator, error) {
 	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
 	// calling fsNotifiyFunc in a goroutine
 	go fsNotifiyFunc(ctx, ch, ugoWatcher.osV, ugoWatcher)
-
 	err = watcher.Add(pathToWatch)
 	if err != nil {
 		fmt.Println(err)
 	}
-	//fmt.Println("Done: ", <-done)
 	return ugoWatcher, nil
 }
 
@@ -93,7 +91,7 @@ func clear(osV string) {
 	}
 }
 
-func fsNotifiyFunc(ctx context.Context, ch chan string, osV string, u *UgoSpectator) {
+func fsNotifiyFunc(ctx context.Context, ch chan bool, osV string, u *UgoSpectator) {
 	for {
 		select {
 		case event, ok := <-u.Watcher.Events:
@@ -112,7 +110,7 @@ func fsNotifiyFunc(ctx context.Context, ch chan string, osV string, u *UgoSpecta
 				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
 
 			}
-
+			u.ch <- true
 			fmt.Printf("\033[1;36m%s\033[0m", "Reloading...")
 			time.Sleep(1 * time.Second)
 			clear(osV)
