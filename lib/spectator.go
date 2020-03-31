@@ -4,8 +4,8 @@ Package ugoSpectator implements a simple library to watch files on the
 directory specified.
 
 Methods:
-		Init() (*UgoSpectator, error)
-		Close() error
+    Init() (*UgoSpectator, error)
+    Close() error
 
 */
 package spectator
@@ -19,7 +19,6 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // UgoSpectator struct with Watcher  and all methods
@@ -27,7 +26,7 @@ type UgoSpectator struct {
 	Watcher   *fsnotify.Watcher  // *fsnotify watcher instance
 	osV       string             // osV take the current os
 	dirname   string             // dirname to watch
-	ch        chan bool          // ch to trigger on file change
+	Ch        chan bool          // ch to trigger on file change
 	CancelCtx context.CancelFunc // context to cancel
 }
 
@@ -38,13 +37,13 @@ func Init(dirname string) (*UgoSpectator, error) {
 	if err != nil {
 		return &UgoSpectator{}, err
 	}
-	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS}
+	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS, Ch: make(chan bool)}
 	clear(ugoWatcher.osV)
 	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
 	//wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	ugoWatcher.CancelCtx = cancel
-	ch := make(chan bool)
+	//ch := make(chan bool)
 
 	cPath, err := os.Getwd()
 	if err != nil {
@@ -54,11 +53,12 @@ func Init(dirname string) (*UgoSpectator, error) {
 	ugoWatcher.dirname = pathToWatch
 	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
 	// calling fsNotifiyFunc in a goroutine
-	go fsNotifiyFunc(ctx, ch, ugoWatcher.osV, ugoWatcher)
+	//ugoWatcher.Ch = <-ch
 	err = watcher.Add(pathToWatch)
 	if err != nil {
 		fmt.Println(err)
 	}
+	go fsNotifiyFunc(ctx, ugoWatcher.osV, ugoWatcher)
 	return ugoWatcher, nil
 }
 
@@ -73,7 +73,7 @@ func (u *UgoSpectator) Close() error {
 // Clear screen function
 func clear(osV string) {
 	if osV == "linux" {
-		cmd := exec.Command("go run main.go")
+		cmd := exec.Command("clear")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 
@@ -91,7 +91,7 @@ func clear(osV string) {
 	}
 }
 
-func fsNotifiyFunc(ctx context.Context, ch chan bool, osV string, u *UgoSpectator) {
+func fsNotifiyFunc(ctx context.Context, osV string, u *UgoSpectator) {
 	for {
 		select {
 		case event, ok := <-u.Watcher.Events:
@@ -110,9 +110,8 @@ func fsNotifiyFunc(ctx context.Context, ch chan bool, osV string, u *UgoSpectato
 				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
 
 			}
-			u.ch <- true
+			u.Ch <- true
 			fmt.Printf("\033[1;36m%s\033[0m", "Reloading...")
-			time.Sleep(1 * time.Second)
 			clear(osV)
 			fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
 			fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
@@ -128,5 +127,4 @@ func fsNotifiyFunc(ctx context.Context, ch chan bool, osV string, u *UgoSpectato
 			fmt.Println("error:", err)
 		}
 	}
-
 }
