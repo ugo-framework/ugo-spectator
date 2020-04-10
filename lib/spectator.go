@@ -74,7 +74,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 			}
 		}
 	}
-	for p := range dirsToWatch {
+	for _, p := range dirsToWatch {
 		err = watcher.Add(p)
 		if err != nil {
 			fmt.Println(err)
