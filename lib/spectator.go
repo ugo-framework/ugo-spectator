@@ -14,9 +14,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -50,12 +52,35 @@ func Init(dirname string) (*UgoSpectator, error) {
 	pathToWatch := path.Join(cPath, dirname)
 	ugoWatcher.dirname = pathToWatch
 	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
-	// calling fsNotifiyFunc in a goroutine
-	//ugoWatcher.Ch = <-ch
-	err = watcher.Add(pathToWatch)
+	dirsToWatch := []string{pathToWatch}
+	files, err := ioutil.ReadDir(pathToWatch)
 	if err != nil {
 		fmt.Println(err)
 	}
+	for _, f := range files {
+		if f.IsDir() {
+			err := filepath.Walk(f.Name(),
+				func(path string, info os.FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+					if info.IsDir() && info.Name()[:1] != "." {
+						dirsToWatch = append(dirsToWatch, path)
+					}
+					return nil
+				})
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	for p := range dirsToWatch {
+		err = watcher.Add(p)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	// calling fsNotifiyFunc in a goroutine
 	go fsNotifiyFunc(ctx, ugoWatcher.osV, ugoWatcher)
 	return ugoWatcher, nil
 }
