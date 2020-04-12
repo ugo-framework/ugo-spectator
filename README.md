@@ -31,7 +31,7 @@ func main() {
 		}
 	}
 }
-    
+
 ```
-The full example can be viewed [here](./examples/example.go)
+The full example can be viewed [here](./examples/main.go)
 This documentation is not Complete and still in its early stages
