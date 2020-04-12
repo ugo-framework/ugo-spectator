@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/fsnotify/fsnotify"
+	"github.com/ugo-framework/ugo-logger/logger"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -42,7 +43,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 	}
 	ugoWatcher := &UgoSpectator{Watcher: watcher, osV: runtime.GOOS, Ch: make(chan bool)}
 	clear(ugoWatcher.osV)
-	fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
+	logger.Info("Ugo Spectator is watching your files")
 	ctx, cancel := context.WithCancel(context.Background())
 	ugoWatcher.CancelCtx = cancel
 	cPath, err := os.Getwd()
@@ -51,7 +52,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 	}
 	pathToWatch := path.Join(cPath, dirname)
 	ugoWatcher.dirname = pathToWatch
-	fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", pathToWatch)
+	logger.Warn("at ", pathToWatch)
 	dirsToWatch := []string{pathToWatch}
 	files, err := ioutil.ReadDir(pathToWatch)
 	if err != nil {
@@ -89,7 +90,7 @@ func Init(dirname string) (*UgoSpectator, error) {
 // fsnotify watcher instance
 func (u *UgoSpectator) Close() error {
 	u.CancelCtx()
-	fmt.Printf("\033[1;31m%s\033[0m", "\nUgo Spector Closing\n")
+	logger.Error("\nUgo Spectator Closing\n")
 	return u.Watcher.Close()
 }
 
@@ -130,14 +131,14 @@ func fsNotifiyFunc(ctx context.Context, osV string, u *UgoSpectator) {
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove {
 				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
-				fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", "Reloading...")
+				logger.Warn("\nat ", "Reloading...")
 			}
 			u.Ch <- true
-			fmt.Printf("\033[1;36m%s\033[0m", "Reloading...")
+			logger.Info("Reloading...")
 			time.Sleep(time.Second * 1)
 			clear(osV)
-			fmt.Printf("\033[1;36m%s\033[0m", "Ugo Spectator is watching your files")
-			fmt.Printf("\033[1;33m%s%s\n\033[0m", "\nat ", u.dirname)
+			logger.Info("Ugo Spectator is watching your files")
+			logger.Info("\nat ", u.dirname)
 			ctx.Done()
 			if event.Op&fsnotify.Rename == fsnotify.Rename {
 				fmt.Printf("Removed file: %s/%s\n", fileSplit[len(fileSplit)-2], fileSplit[len(fileSplit)-1])
